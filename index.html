@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+    <title>Assignment 4</title>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        uniform mat4 mMVP;
+        attribute vec4 vPosition;
+        attribute mat4 vMaterial;
+        attribute vec3 vNormal;
+
+        varying mat4 fMaterial;
+        varying vec3 norm;
+
+        void main(){
+            gl_Position = mMVP * vPosition;
+            color = vColor;
+            norm = vNormal;
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        precision mediump float;
+
+        #define MAX_LIGHTS 10
+        uniform int nLights;
+        uniform struct Light {
+            vec4 position;
+            vec3 color;
+            float ambientCoef;
+        } uLights [MAX_LIGHTS];
+
+        varying mat4 fMaterial; //color of the object
+        varying vec3 norm;  //normal of the point
+        
+        void main(){
+            //gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+            gl_FragColor = color;
+        }
+    </script>
+
+    <script id="wireframe-shader" type="x-shader/x-fragment">
+        precision mediump float;
+
+        uniform vec4 fColor;
+
+        void main(){
+            gl_FragColor = fColor;
+        }
+    </script>
+    <script type="text/javascript" src="./Common/webgl-utils.js"></script>
+    <script type="text/javascript" src="./Common/initShaders.js"></script>
+    <script type="text/javascript" src="./Common/MV.js"></script>
+    <script type="text/javascript" src="./src/Assignment4.js"></script>
+</head>
+<body>
+    <canvas id="gl-canvas" width="1024" height="768" style="border: 2px solid black;">
+        Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>  
+</body>
+</html>
