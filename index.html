@@ -12,7 +12,7 @@
         uniform mat4 mMVP;
         uniform mat4 mL2W;
 
-        #define MAX_LIGHTS 10
+        #define MAX_LIGHTS 3
         uniform int nLights;
         uniform struct Light {
             vec4 position;
@@ -58,7 +58,7 @@
     <script id="fragment-shader" type="x-shader/x-fragment">
         precision mediump float;
 
-        #define MAX_LIGHTS 10
+        #define MAX_LIGHTS 3
         uniform int nLights;
         uniform struct Light {
             vec4 position;
