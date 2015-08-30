@@ -132,9 +132,11 @@
         If you have less than 9 "varying" shader registers ( javascript: gl.getParameter(gl.MAX_VARYING_VECTORS); ) this application might not run because the shader won't compile.  Sorry :(.  When both lights are off you should still 
         be able to see the shapes, but depending on your hardware they may be easier (or more difficult) to see.  I picked a dark color that showed up on the 'worst' monitor I could find.
     </p>
-    <p>
-        Tested in Chrome &amp; I.E. (runs).  Tested in firefox: failed.  Insufficient time to debug. Possibly related Details: 
+    <p style ="width:1024px">
+        Tested in Chrome &amp; I.E. (runs).  Tested in firefox: failed.  Error: "Shader program failed to link. The error log is: Failed to create D3D shaders." Insufficient time to debug.
+        Probably a windows issue. Possibly related Details:
         <a href="https://groups.google.com/forum/#!msg/cesium-dev/-NRjGK1rcdU/ozcB3Ux5CJgJ">Link1</a>
-        <a href="https://code.google.com/p/chromium/issues/detail?id=391957">Link2</a></p>
+        <a href="https://code.google.com/p/chromium/issues/detail?id=391957">Link2</a>
+    </p>
 </body>
 </html>
