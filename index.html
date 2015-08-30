@@ -125,9 +125,16 @@
         Light 0 Enabled <input id="light_0_checkbox" type="checkbox" checked/>
         Light 1 Enabled <input id="light_1_checkbox" type="checkbox" checked/>
     </div>
-    <p style="width:1024px">Developer Notes: <br />
+    <p style="width:1024px;">
+        Developer Notes: 
+    </p>
+    <p style="width:1024px">
         If you have less than 9 "varying" shader registers ( javascript: gl.getParameter(gl.MAX_VARYING_VECTORS); ) this application might not run because the shader won't compile.  Sorry :(.  When both lights are off you should still 
         be able to see the shapes, but depending on your hardware they may be easier (or more difficult) to see.  I picked a dark color that showed up on the 'worst' monitor I could find.
     </p>
+    <p>
+        Tested in Chrome &amp; I.E. (runs).  Tested in firefox: failed.  Insufficient time to debug. Possibly related Details: 
+        <a href="https://groups.google.com/forum/#!msg/cesium-dev/-NRjGK1rcdU/ozcB3Ux5CJgJ">Link1</a>
+        <a href="https://code.google.com/p/chromium/issues/detail?id=391957">Link2</a></p>
 </body>
 </html>
