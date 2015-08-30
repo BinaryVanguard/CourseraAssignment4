@@ -601,7 +601,7 @@ function draw(time) {
 
         gl.uniform4fv(u_lightPos, flatten(vec4()));
         gl.uniform4fv(u_lightColor, flatten(vec4(.1, .1, .1, .1)));
-        gl.uniform1f(u_lightambi, .2);
+        gl.uniform1f(u_lightambi, .3);
         sum++
     }
 
