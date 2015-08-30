@@ -10,6 +10,8 @@
         precision mediump int;
 
         uniform mat4 mMVP;
+        uniform mat4 mL2W;
+
         #define MAX_LIGHTS 10
         uniform int nLights;
         uniform struct Light {
@@ -35,7 +37,7 @@
         varying vec4 norm;
 
         void main(){
-            gl_Position = mMVP * vPosition;
+            gl_Position = mMVP * mL2W * vPosition;
             fAmbi = vAmbi;
             fDiff = vDiff;
             fSpec = vSpec;
@@ -47,7 +49,7 @@
             for(int i = 0; i < MAX_LIGHTS; ++i){
                 if(i >= nLights)
                     break;
-                fLightDir[i] = normalize(uLights[0].position - vPosition);
+                fLightDir[i] = normalize(uLights[i].position - vPosition);
                 fLightRefs[i] = dot(toCam, normalize(2.0 * dot(fLightDir[i], vNormal) * vNormal - fLightDir[i])); 
             }
         }
@@ -112,11 +114,16 @@
     <script type="text/javascript" src="./Common/webgl-utils.js"></script>
     <script type="text/javascript" src="./Common/initShaders.js"></script>
     <script type="text/javascript" src="./Common/MV.js"></script>
+    <script type="text/javascript" src="./src/shapes.js"></script>
     <script type="text/javascript" src="./src/Assignment4.js"></script>
 </head>
 <body>
     <canvas id="gl-canvas" width="1024" height="768" style="border: 2px solid black;">
         Oops ... your browser doesn't support the HTML5 canvas element
     </canvas>  
+    <div>
+        Light 0 Enabled <input id="light_0_checkbox" type="checkbox" checked/>
+        Light 1 Enabled <input id="light_1_checkbox" type="checkbox" checked/>
+    </div>
 </body>
 </html>
