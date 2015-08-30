@@ -151,11 +151,12 @@ function UniformMaterial(vertCount, a, d, s, alpha)
 }
 
 function oneOff() {
+    var square = {};
 
-    var verts = [ vec4(0, -1, 0, 1),
-                  vec4(1, 0, 0, 1),
-                  vec4(-1, 0, 0, 1),
-                  vec4( 0, 1, 0, 1),];
+    var verts = [ vec4(0, -.5, 0, 1),
+                  vec4(.5, 0, 0, 1),
+                  vec4(-.5, 0, 0, 1),
+                  vec4( 0, .5, 0, 1),];
 
     //var verts = [vec4(0, 0, 1, 1),
     //             vec4(0, 0, 0, 1),
@@ -176,45 +177,57 @@ function oneOff() {
 
     var normals = calcNormals(verts, indexData, gl.TRIANGLE_STRIP);
 
-    var vertBufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertBufferId);
+    square.vertBufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, square.vertBufferId);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(verts), gl.STATIC_DRAW);
-
-    var vPosition = gl.getAttribLocation(program, "vPosition");
-    gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vPosition);
-
-    var matBufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, matBufferId);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(material), gl.STATIC_DRAW);
-
-    var vAmbi = gl.getAttribLocation(program, "vAmbi");
-    gl.vertexAttribPointer(vAmbi, 4, gl.FLOAT, false, 64, 0);
-    gl.enableVertexAttribArray(vAmbi);
-
-    var vDiff = gl.getAttribLocation(program, "vDiff");
-    gl.vertexAttribPointer(vDiff, 4, gl.FLOAT, false, 64, 16);
-    gl.enableVertexAttribArray(vDiff);
-
-    var vSpec = gl.getAttribLocation(program, "vSpec");
-    gl.vertexAttribPointer(vSpec, 4, gl.FLOAT, false, 64, 32);
-    gl.enableVertexAttribArray(vSpec);
-
-    var vAlpha = gl.getAttribLocation(program, "vAlpha");
-    gl.vertexAttribPointer(vAlpha, 4, gl.FLOAT, false, 64, 48);
-    gl.enableVertexAttribArray(vAlpha);
-
-    var indexBufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBufferId);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexData, gl.STATIC_DRAW);
 
     var normBufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, normBufferId);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW);
 
-    var vNormals = gl.getAttribLocation(program, "vNormal");
-    gl.vertexAttribPointer(vNormals, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vNormals);
+    var matBufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, matBufferId);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(material), gl.STATIC_DRAW);
+
+    var indexBufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBufferId);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, indexData, gl.STATIC_DRAW);
+
+    square.render = function () {
+        var vPosition = gl.getAttribLocation(program, "vPosition");
+        var vNormals = gl.getAttribLocation(program, "vNormal");
+        var vAmbi = gl.getAttribLocation(program, "vAmbi");
+        var vDiff = gl.getAttribLocation(program, "vDiff");
+        var vSpec = gl.getAttribLocation(program, "vSpec");
+        var vAlpha = gl.getAttribLocation(program, "vAlpha");
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, square.vertBufferId);
+        gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, normBufferId);
+        gl.vertexAttribPointer(vNormals, 4, gl.FLOAT, false, 0, 0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, matBufferId);
+        gl.vertexAttribPointer(vAmbi, 4, gl.FLOAT, false, 64, 0);
+        gl.vertexAttribPointer(vDiff, 4, gl.FLOAT, false, 64, 16);
+        gl.vertexAttribPointer(vSpec, 4, gl.FLOAT, false, 64, 32);
+        gl.vertexAttribPointer(vAlpha, 4, gl.FLOAT, false, 64, 48);
+
+        gl.enableVertexAttribArray(vPosition);
+        gl.enableVertexAttribArray(vNormals);
+        gl.enableVertexAttribArray(vAmbi);
+        gl.enableVertexAttribArray(vDiff);
+        gl.enableVertexAttribArray(vSpec);
+        gl.enableVertexAttribArray(vAlpha);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBufferId);
+
+        var u_mL2W = gl.getUniformLocation(program, "mL2W");
+        gl.uniformMatrix4fv(u_mL2W, false, flatten(mat4()));
+
+        gl.drawElements(gl.TRIANGLE_STRIP, 4, gl.UNSIGNED_SHORT, 0);
+    }
+    return square;
 }
 
 //todo: refactor
@@ -226,9 +239,6 @@ function CreateCone(origin_point) {
     cone.point_normals = calcNormals(cone.point.points, calcIndices(cone.point.points), gl.TRIANGLE_FAN);
     cone.base_normals = calcNormals(cone.base.points, calcIndices(cone.base.points), gl.TRIANGLE_FAN);
 
-    var vPosition = gl.getAttribLocation(program, "vPosition");
-    var vNormals = gl.getAttribLocation(program, "vNormal");
-    
     var pointVertBufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, pointVertBufferId);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(cone.point.points), gl.STATIC_DRAW);
@@ -340,9 +350,6 @@ function CreateCylinder(origin_point) {
 
     for (var i = 0; i < cylinder.sides.length; ++i)
         cylinder.side_normals[i] = calcNormals(cylinder.sides[i].points, calcIndices(cylinder.sides[i].points), gl.TRIANGLE_STRIP);
-
-    var vPosition = gl.getAttribLocation(program, "vPosition");
-    var vNormals = gl.getAttribLocation(program, "vNormal");
 
     var topVertBufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, topVertBufferId);
@@ -507,6 +514,8 @@ function hookupControls() {
 
 var cone;
 var cylinder;
+var square;
+
 function init() {
     canvas = document.getElementById("gl-canvas");
     if (!canvas) {
@@ -532,7 +541,7 @@ function init() {
     mPersp = perspective(75, canvas.width / canvas.height, 1, 1000);
     //mPersp = ortho(-1, 1, -1, 1, 1, -1);
     
-    oneOff();
+    square = oneOff();
     
     cone = CreateCone(vec4());
     cone.transform.pos[0] = -1;
@@ -604,6 +613,7 @@ function draw(time) {
     //renderSquare();
     cone.render();
     cylinder.render();
+    square.render();
 
     requestAnimationFrame(draw);
 }
