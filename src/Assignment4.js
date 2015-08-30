@@ -540,13 +540,6 @@ function init() {
     cylinder = CreateCylinder(vec4());
     cylinder.transform.pos[0] = 1;
 
-    //renderFan(cone.point, cone.transform);
-    //renderFan(cone.base, cone.transform);
-
-    //renderFan(cylinder.top, cylinder.transform);
-    //renderFan(cylinder.bottom, cylinder.transform);
-    //for (var i = 0; i < cylinder.sides.length; ++i) renderStrip(cylinder.sides[i], cylinder.transform);
-
     requestAnimationFrame(draw);
    
     hookupControls();
