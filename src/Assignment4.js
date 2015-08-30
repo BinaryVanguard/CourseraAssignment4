@@ -557,7 +557,7 @@ var LightPosition = [vec4(0, 0, 100, 1),
                       vec4(0, 0, 10, 1)];
 var LightColor = [vec4(0, .3, .3, 1),
                   vec4(1, 0, 0, 1)];
-var LightAmbi = [.1, 0]
+var LightAmbi = [.1, .1]
 var light_enabled = [true, true];
 function draw(time) {
     var deltaT = (time - lastTime) / 1000;
@@ -578,16 +578,7 @@ function draw(time) {
     var u_Cam = gl.getUniformLocation(program, "cam");
     gl.uniform4fv(u_Cam, flatten(vec4(camera.pos)));
 
-    var u_lightPos = gl.getUniformLocation(program, "uLights[0].position");
-    var u_lightColor = gl.getUniformLocation(program, "uLights[0].color");
-    var u_lightambi = gl.getUniformLocation(program, "uLights[0].ambientCoef");
-
-    gl.uniform4fv(u_lightPos, flatten(vec4()));
-    gl.uniform4fv(u_lightColor, flatten(vec4(.1, .1, .1, .1)));
-    gl.uniform1f(u_lightambi, .2);
-
-
-    var sum = 1;
+    var sum = 0;
     for (var i = 0; i < LightPosition.length; ++i) {
         if (light_enabled[i]) {
             u_lightPos = gl.getUniformLocation(program, "uLights[" + sum + "].position");
@@ -599,6 +590,19 @@ function draw(time) {
             gl.uniform1f(u_lightambi, LightAmbi[i]);
             sum++;
         }
+    }
+
+    //this is done this way just in case a low end computer doesn't have enough varying vectors (registers)
+    //add an ambient light, for when all other lights go out...
+    if (sum === 0) {
+        var u_lightPos = gl.getUniformLocation(program, "uLights[0].position");
+        var u_lightColor = gl.getUniformLocation(program, "uLights[0].color");
+        var u_lightambi = gl.getUniformLocation(program, "uLights[0].ambientCoef");
+
+        gl.uniform4fv(u_lightPos, flatten(vec4()));
+        gl.uniform4fv(u_lightColor, flatten(vec4(.1, .1, .1, .1)));
+        gl.uniform1f(u_lightambi, .2);
+        sum++
     }
 
     var u_nLights = gl.getUniformLocation(program, "nLights");
