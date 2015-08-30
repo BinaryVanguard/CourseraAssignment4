@@ -5,18 +5,51 @@
     <title>Assignment 4</title>
 
     <script id="vertex-shader" type="x-shader/x-vertex">
-        uniform mat4 mMVP;
-        attribute vec4 vPosition;
-        attribute mat4 vMaterial;
-        attribute vec3 vNormal;
+        //anyway around this while still having the uniform(s) in both shaders?
+        precision mediump float;
+        precision mediump int;
 
-        varying mat4 fMaterial;
-        varying vec3 norm;
+        uniform mat4 mMVP;
+        #define MAX_LIGHTS 10
+        uniform int nLights;
+        uniform struct Light {
+            vec4 position;
+            vec4 color;
+            float ambientCoef;
+        } uLights [MAX_LIGHTS];
+        uniform vec4 cam;   //can we just grab the 13, 14, 15, 16 from mMVP matrix? 
+
+        attribute vec4 vPosition;
+        attribute vec4 vAmbi;
+        attribute vec4 vDiff;
+        attribute vec4 vSpec;
+        attribute vec4 vAlpha;
+        attribute vec4 vNormal;
+
+        varying vec4 fAmbi;
+        varying vec4 fDiff;
+        varying vec4 fSpec;
+        varying vec4 fAlpha;
+        varying vec4 fLightDir[MAX_LIGHTS];
+        varying float fLightRefs[MAX_LIGHTS];
+        varying vec4 norm;
 
         void main(){
             gl_Position = mMVP * vPosition;
-            color = vColor;
+            fAmbi = vAmbi;
+            fDiff = vDiff;
+            fSpec = vSpec;
+            fAlpha = vAlpha;
             norm = vNormal;
+
+            vec4 toCam = normalize(cam - vPosition);
+
+            for(int i = 0; i < MAX_LIGHTS; ++i){
+                if(i >= nLights)
+                    break;
+                fLightDir[i] = normalize(uLights[0].position - vPosition);
+                fLightRefs[i] = dot(toCam, normalize(2.0 * dot(fLightDir[i], vNormal) * vNormal - fLightDir[i])); 
+            }
         }
     </script>
 
@@ -27,16 +60,43 @@
         uniform int nLights;
         uniform struct Light {
             vec4 position;
-            vec3 color;
+            vec4 color;
             float ambientCoef;
         } uLights [MAX_LIGHTS];
 
-        varying mat4 fMaterial; //color of the object
-        varying vec3 norm;  //normal of the point
+        varying vec4 fAmbi; //material properties
+        varying vec4 fDiff;
+        varying vec4 fSpec;
+        varying vec4 fAlpha;
+        varying vec4 fLightDir[MAX_LIGHTS];
+        varying float fLightRefs[MAX_LIGHTS];
+        varying vec4 norm;  //normal of the point
         
         void main(){
-            //gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
-            gl_FragColor = color;
+            gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+            //gl_FragColor = color;
+            
+            vec4 Ambient = vec4(0, 0, 0, 1);
+            vec4 Diffuse = vec4(0, 0, 0, 1);
+            vec4 Specular = vec4(0, 0, 0, 1);
+            vec4 final = vec4(0, 0, 0, 1);
+            float DiffCoef;
+            for(int i = 0; i < MAX_LIGHTS; ++i) {
+                if(i >= nLights)
+                    break;
+                
+                Ambient += uLights[i].ambientCoef * uLights[i].color * fAmbi;
+                DiffCoef = max(0.0, dot(norm, fLightDir[i]));
+                Diffuse += DiffCoef * uLights[i].color * fDiff;
+                if(DiffCoef > 0.0) {
+                    Specular.x += max(0.0, pow(fLightRefs[i], fAlpha.w) * uLights[i].color.x * fSpec.x);
+                    Specular.z += max(0.0, pow(fLightRefs[i], fAlpha.w) * uLights[i].color.z * fSpec.z);
+                    Specular.y += max(0.0, pow(fLightRefs[i], fAlpha.w) * uLights[i].color.y * fSpec.y);
+                    //Specular.w += pow(fLightRefs[i], fAlpha.w) * uLights[i].color.w * fSpec.w;
+                }
+            }
+            gl_FragColor = Ambient + Diffuse + Specular;  
+            gl_FragColor.w = 1.0;
         }
     </script>
 

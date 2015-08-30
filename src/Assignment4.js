@@ -67,7 +67,7 @@ function calcNormals(verts, indices, mode) {
     var v0, v1, v2, v3, v4, surface;
 
     for (var i = 0; i < normals.length; ++i)
-        normals[i] = vec3();
+        normals[i] = vec4(0,0,0,0);
     
     //TODO - strip might not calculate normals properly, since the winding changes every other time.
     // what about fan? 
@@ -81,7 +81,7 @@ function calcNormals(verts, indices, mode) {
             v3 = subtract(v1, v0);
             v4 = subtract(v2, v0);
 
-            surface = (i%2 == 0) ? normalize(cross(v3, v4)) : normalize(cross(v4, v3));  // this is the actual surface normal;
+            surface = (i % 2 == 0) ? normalize(vec4(cross(v3, v4), 0)) : normalize(vec4(cross(v4, v3), 0));  // this is the actual surface normal;
 
             normals[indices[i]] = add(normals[indices[i]], surface);
             normals[indices[i + 1]] = add(normals[indices[i + 1]], surface);
@@ -97,7 +97,7 @@ function calcNormals(verts, indices, mode) {
             v3 = subtract(v1, v0);
             v4 = subtract(v2, v0);
 
-            surface = normalize(cross(v3, v4));  // this is the actual surface normal;
+            surface = normalize(vec4(cross(v3, v4), 0));  // this is the actual surface normal;
 
             normals[indices[i]] = add(normals[indices[i]], surface);
             normals[indices[i + 1]] = add(normals[indices[i + 1]], surface);
@@ -113,9 +113,9 @@ function calcNormals(verts, indices, mode) {
             v3 = subtract(v1, v0);
             v4 = subtract(v2, v0);
 
-            surface = normalize(cross(v3, v4));  // this is the actual surface normal;
+            surface = normalize(vec4(cross(v3, v4), 0));  // this is the actual surface normal;
 
-            normals[indices[i]] = add(normals[indices[i]], surface);
+            normals[indices[i]]     = add(normals[indices[i]], surface);
             normals[indices[i + 1]] = add(normals[indices[i + 1]], surface);
             normals[indices[i + 2]] = add(normals[indices[i + 2]], surface);
         }
@@ -127,11 +127,26 @@ function calcNormals(verts, indices, mode) {
     return normals;
 }
 
+function UniformMaterial(vertCount, a, d, s, alpha)
+{
+    var out = new Array(vertCount * 4);
+
+    for (var i = 0; i < out.length; i+=4) {
+        out[i] = a;
+        out[i+1] = d;
+        out[i+2] = s;
+        out[i + 3] = [0, 0, 0, alpha]; //shininess coef
+    }
+
+    return out;
+}
+
 function oneOff() {
 
-    var verts = [ vec4(-1, 0, 0, 1),
-                  vec4( 1, 0, 0, 1),
-                  vec4( 0, 1, 0, 1)];
+    var verts = [ vec4(0, -1, 0, 1),
+                  vec4(1, 0, 0, 1),
+                  vec4(-1, 0, 0, 1),
+                  vec4( 0, 1, 0, 1),];
 
     //var verts = [vec4(0, 0, 1, 1),
     //             vec4(0, 0, 0, 1),
@@ -141,14 +156,16 @@ function oneOff() {
     //             vec4(0, 0, -1, 1),
     //             vec4(1, 0, 0, 1)];
 
-    var colors = [1, 0, 0, 1,
-                  0, 1, 0, 1,
-                  0, 0, 1, 1];
-    var indexData = new Uint16Array([0, 1, 2]);
+    //var colors = [1, 0, 0, 1,
+    //              0, 1, 0, 1,
+    //              0, 0, 1, 1];
+
+    var material = UniformMaterial(verts.length, vec4(1,1,1,1), vec4(1,1,1,1), vec4(1, 1, 1, 1), 50);
+    var indexData = new Uint16Array([0, 1, 2, 3]);
 
     //console.log(calcNormals(verts, indexData, gl.TRIANGLES));
 
-    var normals = calcNormals(verts, indexData, gl.TRIANGLES);
+    var normals = calcNormals(verts, indexData, gl.TRIANGLE_STRIP);
 
     var vertBufferId = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vertBufferId);
@@ -158,13 +175,25 @@ function oneOff() {
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
-    var colorBufferId = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, colorBufferId);
-    gl.bufferData(gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW);
+    var matBufferId = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, matBufferId);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(material), gl.STATIC_DRAW);
 
-    var vColor = gl.getAttribLocation(program, "vColor");
-    gl.vertexAttribPointer(vColor, 4, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(vColor);
+    var vAmbi = gl.getAttribLocation(program, "vAmbi");
+    gl.vertexAttribPointer(vAmbi, 4, gl.FLOAT, false, 64, 0);
+    gl.enableVertexAttribArray(vAmbi);
+
+    var vDiff = gl.getAttribLocation(program, "vDiff");
+    gl.vertexAttribPointer(vDiff, 4, gl.FLOAT, false, 64, 16);
+    gl.enableVertexAttribArray(vDiff);
+
+    var vSpec = gl.getAttribLocation(program, "vSpec");
+    gl.vertexAttribPointer(vSpec, 4, gl.FLOAT, false, 64, 32);
+    gl.enableVertexAttribArray(vSpec);
+
+    var vAlpha = gl.getAttribLocation(program, "vAlpha");
+    gl.vertexAttribPointer(vAlpha, 4, gl.FLOAT, false, 64, 48);
+    gl.enableVertexAttribArray(vAlpha);
 
     var indexBufferId = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBufferId);
@@ -175,7 +204,7 @@ function oneOff() {
     gl.bufferData(gl.ARRAY_BUFFER, flatten(normals), gl.STATIC_DRAW);
 
     var vNormals = gl.getAttribLocation(program, "vNormal");
-    gl.vertexAttribPointer(vNormals, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(vNormals, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vNormals);
 }
 
@@ -194,7 +223,7 @@ function init() {
     }
 
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
 
     program = initShaders(gl, "vertex-shader", "fragment-shader");
@@ -210,12 +239,15 @@ function init() {
 }
 
 var lastTime = 0;
+var LightPosition = vec4(0, 0, 100, 1);
 function render(time) {
     var deltaT = (time - lastTime) / 1000;
     lastTime = time;
 
     //camera.rotate(90 * deltaT, [0, 1, 0]);
     //camera.move(vec3(0, 0, -1 * deltaT));
+
+    LightPosition = multMV(rotate(90 * deltaT , [0, 1, 0]), LightPosition);
 
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -224,8 +256,23 @@ function render(time) {
     var u_mMVP = gl.getUniformLocation(program, "mMVP");
     gl.uniformMatrix4fv(u_mMVP, false, flatten(mFinal));
 
+    var u_Cam = gl.getUniformLocation(program, "cam");
+    gl.uniform4fv(u_Cam, flatten(vec4(camera.pos)));
+
+    var u_nLights = gl.getUniformLocation(program, "nLights");
+    gl.uniform1i(u_nLights, 1);
+
+    var u_light0Pos = gl.getUniformLocation(program, "uLights[0].position");
+    gl.uniform4fv(u_light0Pos, flatten(LightPosition));
+
+    var u_light0Color = gl.getUniformLocation(program, "uLights[0].color");
+    gl.uniform4fv(u_light0Color, flatten(vec4(0, .5, .5, 1)));
+
+    var u_light0ambi = gl.getUniformLocation(program, "uLights[0].ambientCoef");
+    gl.uniform1f(u_light0ambi, .1);
+
     //gl.drawArrays(gl.TRIANGLE_STRIP, 0, 3);
-    gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLE_STRIP, 4, gl.UNSIGNED_SHORT, 0);
 
     requestAnimationFrame(render);
 }
